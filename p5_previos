@@ -1,0 +1,70 @@
+// Previos practica 5
+
+// Cuando acondicionamos el sensor se conectará al microcontrolador a un pin analógico.
+
+#include <>
+#include "config.h"
+#include "timer.h" // Funcion creada para inicializar timer en la sesión anterior (inicializarTimer1).
+
+// Declaracion de funciones
+
+
+// Declaracion de variables
+
+
+
+int main (void){
+inicializarReloj();
+
+//Pines analogicos o digitales
+// Puerto RB14 digital (LED) -> 1.
+AD1PCFGL|=(1<<14);
+// Conectamos el sensor al puerto RA1 AN1 (analogico) -> 0.
+AD1PCFGL&=~(1<<1);
+
+//Salidas y Entradas.
+
+// Salida el LED RB14.
+TRISB&=~(1<<14);
+//Entrada datos del sensor.
+TRISA|=(1<<1);
+
+// Configuramos timer y 
+
+// Configuracion AD1
+AD1CON3=0x0105; // 1 numero de ciclos de muestreo, 5 Preescalado calculado como tiempo total= 1/500000= 2microseg; 13*TAD=2microseg; TAD=150ns=6*25ns=(1+5)*25ns.
+IFS0bits.AD1IF=0; // Bandera a cero.
+IEC0bits.AD1IE=1; // Habilitamos interrupcion al concluir la conversion.
+IPC3bits.AD1IP=4; // Prioridad intermedia.
+AD1CHS0=1; // Seleccionamos el canal.
+AD1CON1=0x80E0; // Arrancamos periférico pero no empieza muestrear y comienza la conversión automáticamente al terminar de muestrear.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
+
