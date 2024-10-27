@@ -10,7 +10,8 @@
 
 
 // Declaracion de variables
-
+static int muestra=0;
+static int 
 
 
 int main (void){
@@ -28,8 +29,11 @@ AD1PCFGL&=~(1<<1);
 TRISB&=~(1<<14);
 //Entrada datos del sensor.
 TRISA|=(1<<1);
+//LED apagado inicialmente
 
-// Configuramos timer y 
+
+// Configuramos timer y empezamos a contar, como tenemos que tomar 
+inicializarTimer1(1000); //100 ms
 
 // Configuracion AD1
 AD1CON3=0x0105; // 1 numero de ciclos de muestreo, 5 Preescalado calculado como tiempo total= 1/500000= 2microseg; 13*TAD=2microseg; TAD=150ns=6*25ns=(1+5)*25ns.
@@ -38,6 +42,36 @@ IEC0bits.AD1IE=1; // Habilitamos interrupcion al concluir la conversion.
 IPC3bits.AD1IP=4; // Prioridad intermedia.
 AD1CHS0=1; // Seleccionamos el canal.
 AD1CON1=0x80E0; // Arrancamos periférico pero no empieza muestrear y comienza la conversión automáticamente al terminar de muestrear.
+AD1CON1|=(1<<15);//Empezamos a muestrear.
+
+while(1){
+
+
+
+
+}
+
+}
+
+void __attribute__((interrupt,no_auto_psv))
+_T1Interrupt(void){ //Función interrupción Timer 1
+IFS0bits.T1IF=0; // Bandera a 0.
+muestra=1; // Muestra adquiere el valor 1 indicando que han pasado 100 ms y se puede adquirir medida.
+}
+
+void __attribute__((interrupt,no_auto_psv)) _ADC1Interrupt(void){ //Función interrupción AD1.
+IFS0bits.AD1IF=0;
+
+if(medida=1){
+
+
+
+
+
+
+
+
+
 
 
 
