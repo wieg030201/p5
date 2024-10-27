@@ -7,11 +7,11 @@
 #include "timer.h" // Funcion creada para inicializar timer en la sesión anterior (inicializarTimer1).
 
 // Declaracion de funciones
-
+unsigned int interpolarSensor(unsigned int medida_adc);
 
 // Declaracion de variables
 static int muestra=0;
-static int 
+static int medidadigital;
 
 
 int main (void){
@@ -59,46 +59,25 @@ IFS0bits.T1IF=0; // Bandera a 0.
 muestra=1; // Muestra adquiere el valor 1 indicando que han pasado 100 ms y se puede adquirir medida.
 }
 
-void __attribute__((interrupt,no_auto_psv)) _ADC1Interrupt(void){ //Función interrupción AD1.
+void __attribute__((interrupt,no_auto_psv)) _ADC1Interrupt(void){ //Función interrupción AD1 cuando termina una conversión.
 IFS0bits.AD1IF=0;
 
-if(medida=1){
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+if(muestra==1){//Si han pasado 100 ms, se tomará una medida.
+// El sensor irá de 0,5 (0 lx) a 3 voltios (1000 lx) y saturará aproximadamente en 3,3 (un poco antes al ser rail to rail) -> Cuando fotorresistencia valga 1589,28 ohmios con R1=10 Kohmios R2=1,8 Kohmios y R3=8,9 kohmios
+medidadigital=ACD1BUF0;
 
 }
+
+AD1CON1|=(1<<15);//Vuelve a empezar a muestrear.
+
+}
+
+unsigned int interpolarSensor(unsigned int medida_adc){ //Función para realizar una interpolación lineal de los valores adquiridos del sensor.
+// Vectores consatantes con la información necesaria para interpolar.
+
+const unsigned int vec_adc[]={};
+const unsigned int vec_lux[]={};
+
+}
+
 
