@@ -72,14 +72,26 @@ AD1CON1|=(1<<15);//Vuelve a empezar a muestrear.
 
 }
 
-unsigned int interpolarSensor(unsigned int medida_adc){ //Función para realizar una interpolación lineal de los valores adquiridos del sensor.
+unsigned int interpolarSensor(unsigned int medida_adc){ //Función para realizar una interpolación lineal de los valores adquiridos del sensor. Medida_adc es en voltios digitales.
 // Vectores consatantes con la información necesaria para interpolar.
 
 const unsigned int vec_adc[]={155, 384, 484, 631, 701, 738, 795, 879, 924, 964 }; // Voltios digitales a partir de la curva de calibracion realizada en la sesión 1 de la práctica 5. Nuestros cálculos nos han requerido una R3 de 8900 ohmios. En el laboratorio no se ha encontrado de ese valor por lo que hemos puesto dos resistencias en serie de 680 ohmios y 8200 ohmios=8880 ohmios. Se realizará el cálculo con este valor para mayor precisión.
 const unsigned int vec_lux[]={0, 105, 200, 390, 500, 600, 700, 850, 1000, 1200}; // Valor de los luxes.
 
+//Variable para el bucle for
+int i;
+unsigned int lux; // Valor que será devuelto por la función
 
+//Bucle for para hacer la interpolación de la medida.
+for(i=0;i<10;i++){
+if(vec_adc[i]<medida_adc && medida_adc<vec_adc[i+1]){
 
+lux=((vec_lux[i+1]-vec_lux[i])/(vec_adc[i+1]-vec_adc[i]))*(medida_adc-vec_adc[i])+vec_lux[i];
+
+}
+
+}
+return (lux);
 }
 
 
