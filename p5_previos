@@ -30,6 +30,7 @@ TRISB&=~(1<<14);
 //Entrada datos del sensor.
 TRISA|=(1<<1);
 //LED apagado inicialmente
+PORTB|=(1<<14); // LED en pull-up. apagado ->1 
 
 
 // Configuramos timer y empezamos a contar, como tenemos que tomar 
@@ -45,12 +46,20 @@ AD1CON1=0x80E0; // Arrancamos periférico pero no empieza muestrear y comienza l
 AD1CON1|=(1<<15);//Empezamos a muestrear.
 
 while(1){
+int valor;
+valor=interpolarSensor(medidadigital);
 
+if(valor>=600){ //Ponemos el umbral en 600 luxes
+PORTB|=(1<<14); // LED apagado si esta por encima del umbral.
 
+}
+else{
+PORTB&=~(1<<14); Encendemos LED cuando está por debajo del umbral. -> 0 (pull-up)
 
 
 }
-
+}
+return 0;
 }
 
 void __attribute__((interrupt,no_auto_psv))
