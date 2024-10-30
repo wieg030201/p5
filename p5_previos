@@ -74,6 +74,7 @@ IFS0bits.AD1IF=0;
 if(muestra==1){//Si han pasado 100 ms, se tomará una medida.
 // El sensor irá de 0,5 (0 lx) a 3 voltios (1000 lx) y saturará aproximadamente en 3,3 (un poco antes al ser rail to rail) -> Cuando fotorresistencia valga 1589,28 ohmios con R1=10 Kohmios R2=1,8 Kohmios y R3=8,9 kohmios
 medidadigital=ACD1BUF0;
+muestra=0;
 
 }
 
