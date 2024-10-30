@@ -93,9 +93,9 @@ unsigned int lux; // Valor que será devuelto por la función
 
 //Bucle for para hacer la interpolación de la medida.
 for(i=0;i<10;i++){
-if(vec_adc[i]<medida_adc && medida_adc<vec_adc[i+1]){
+if(vec_adc[i]<medidadigital && medidadigital<vec_adc[i+1]){
 
-lux=((vec_lux[i+1]-vec_lux[i])/(vec_adc[i+1]-vec_adc[i]))*(medida_adc-vec_adc[i])+vec_lux[i];
+lux=((vec_lux[i+1]-vec_lux[i])/(vec_adc[i+1]-vec_adc[i]))*(medidadigital-vec_adc[i])+vec_lux[i];
 
 }
 
