@@ -105,3 +105,184 @@ return (lux);
 }
 
 
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+//Programa con bombilla
+
+#include <>
+#include "config.h"
+#include "timer.h" // Funcion creada para inicializar timer en la sesión anterior (inicializarTimer1).
+#include "pwm.h" //Funciones para generar la señal de encendido de la bombilla en función de los luxes.
+
+// Declaracion de funciones
+unsigned int interpolarSensor(unsigned int medida_adc);
+
+// Declaracion de variables
+static int muestra=0;
+static int medidadigital;
+
+
+int main (void){
+inicializarReloj();
+
+//Pines analogicos o digitales
+// Puerto RB14 digital (LED) -> 1.
+AD1PCFGL|=(1<<14);
+// Conectamos el sensor al puerto RA1 AN1 (analogico) -> 0.
+AD1PCFGL&=~(1<<1);
+
+//Salidas y Entradas.
+
+// Salida el LED RB14.
+TRISB&=~(1<<14);
+//Entrada datos del sensor.
+TRISA|=(1<<1);
+//LED apagado inicialmente
+PORTB|=(1<<14); // LED en pull-up. apagado ->1 
+
+
+// Configuramos timer y empezamos a contar, como tenemos que tomar 
+inicializarTimer1(1000); //100 ms
+
+// Configuracion AD1
+AD1CON3=0x0105; // 1 numero de ciclos de muestreo, 5 Preescalado calculado como tiempo total= 1/500000= 2microseg; 13*TAD=2microseg; TAD=150ns=6*25ns=(1+5)*25ns.
+IFS0bits.AD1IF=0; // Bandera a cero.
+IEC0bits.AD1IE=1; // Habilitamos interrupcion al concluir la conversion.
+IPC3bits.AD1IP=4; // Prioridad intermedia.
+AD1CHS0=1; // Seleccionamos el canal.
+AD1CON1=0x80E0; // Arrancamos periférico pero no empieza muestrear y comienza la conversión automáticamente al terminar de muestrear.
+AD1CON1|=(1<<15);//Empezamos a muestrear.
+
+while(1){
+unsigned int valor;
+valor=interpolarSensor(medidadigital);
+unsigned int tiempo_encendido;
+
+if(valor>=1000){ //Ponemos el umbral en 1000 luxes
+PORTB&=~(1<<14); // Transistor no conduce, salida en nivel bajo ->0 por lo que la bombilla no se enciende.
+
+}
+else{
+//Utilizamos las funciones creadas en pwm para encender la bombilla gradualmente en función de los luxes. Elegiremos una frecuencia de 500 Hz, para mantener el filamento de tungsteno caliente pero no llegar a sobrecarcarlo.
+// Tenemos por lo tanto como periodo de señal 1/500= 2ms.
+unsigned int periodo=20; //periodo de la señal en décimas de milisegundo.
+
+tiempo_encendido=-(periodo*valor)/1000+periodo; // me lo da en décimas de segundo
+inicializarPWM(); //Modificamos la función para que el Timer 2 esté configurado para terminar de contar cada 0,001 ms
+periodoPWM(periodo);
+dcPWM(tiempo_encendido);
+
+}
+}
+return 0;
+}
+
+void __attribute__((interrupt,no_auto_psv))
+_T1Interrupt(void){ //Función interrupción Timer 1
+IFS0bits.T1IF=0; // Bandera a 0.
+muestra=1; // Muestra adquiere el valor 1 indicando que han pasado 100 ms y se puede adquirir medida.
+}
+
+void __attribute__((interrupt,no_auto_psv)) _ADC1Interrupt(void){ //Función interrupción AD1 cuando termina una conversión.
+IFS0bits.AD1IF=0;
+
+if(muestra==1){//Si han pasado 100 ms, se tomará una medida.
+// El sensor irá de 0,5 (0 lx) a 3 voltios (1000 lx) y saturará aproximadamente en 3,3 (un poco antes al ser rail to rail) -> Cuando fotorresistencia valga 1589,28 ohmios con R1=10 Kohmios R2=1,8 Kohmios y R3=8,9 kohmios
+medidadigital=ACD1BUF0;
+muestra=0;
+
+}
+
+AD1CON1|=(1<<15);//Vuelve a empezar a muestrear.
+
+}
+
+unsigned int interpolarSensor(unsigned int medida_adc){ //Función para realizar una interpolación lineal de los valores adquiridos del sensor. Medida_adc es en voltios digitales.
+// Vectores consatantes con la información necesaria para interpolar.
+
+const unsigned int vec_adc[]={155, 384, 484, 631, 701, 738, 795, 879, 924, 964 }; // Voltios digitales a partir de la curva de calibracion realizada en la sesión 1 de la práctica 5. Nuestros cálculos nos han requerido una R3 de 8900 ohmios. En el laboratorio no se ha encontrado de ese valor por lo que hemos puesto dos resistencias en serie de 680 ohmios y 8200 ohmios=8880 ohmios. Se realizará el cálculo con este valor para mayor precisión.
+const unsigned int vec_lux[]={0, 105, 200, 390, 500, 600, 700, 850, 1000, 1200}; // Valor de los luxes.
+
+//Variable para el bucle for
+int i;
+unsigned int lux; // Valor que será devuelto por la función
+
+//Bucle for para hacer la interpolación de la medida.
+for(i=0;i<10;i++){
+if(vec_adc[i]<medidadigital && medidadigital<vec_adc[i+1]){
+
+lux=((vec_lux[i+1]-vec_lux[i])/(vec_adc[i+1]-vec_adc[i]))*(medidadigital-vec_adc[i])+vec_lux[i];
+
+}
+
+}
+return (lux);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//Funciones pwm.h modificadas
+
+void inicializarPWM(void) { 
+T2CON = 0x0000; 
+PR2 = FCY / 1000000; 
+TMR2 = 0; // Empieza a contar desde 0. 
+ 
+ 
+    IFS0bits.T2IF = 0; // bandera a 0 
+    IEC0bits.T2IE = 1; //Habilitamos interrupción 
+    IPC1bits.T2IP = 4; // Prioridad intermedia 
+    T2CON |= (1 << 15); // Comienza a contar 
+
+} // Función que inicializa el timer2 utilizando el preescalado 0, ya que es 
+menor a 1,6 ms. 
+ 
+ 
+void __attribute__((interrupt, no_auto_psv)) 
+_T2Interrupt(void) {  
+ 
+// Interrupción que se ejecuta cada 0,001 ms. 
+ 
+static int ticks = 0; // Variable que se inicializa una vez y guarda su 
+último valor. Con la ayuda de esta se genera la señal. 
+ 
+    IFS0bits.T2IF = 0; // Bandera a 0. 
+ 
+if (ticks < tiempo_nivelalto*100) { //Cuando la variable ticks sea menor que 
+el tiempo_nivelalto determinado, la bombilla se encenderá ya que circulará corriente. Cabe destacar que se ha multiplicado por 100 ya que el timer cuenta 0,001 ms.
+ 
+        PORTB |= (1 << 14); 
+    } 
+ 
+else { //Cuando la variable ticks sea mayor que el tiempo_nivelalto 
+determinado, ela bombilla estará apagada ya que no circula corriente. -> 0 
+ 
+        PORTB &= ~(1 << 14); 
+    } 
+ 
+    ticks++; 
+ 
+    if (ticks >= periodo*100) { 
+ 
+        ticks = 0; 
+ 
+    } // Cuando la variable ticks adquiere un valor mayor o igual que la 
+variable periodo, esta se vuelve a poner a 0 para repetir la señal.  
+ 
+}
+
+
+
+
+
+
+
+
+
