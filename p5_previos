@@ -43,7 +43,7 @@ IEC0bits.AD1IE=1; // Habilitamos interrupcion al concluir la conversion.
 IPC3bits.AD1IP=4; // Prioridad intermedia.
 AD1CHS0=1; // Seleccionamos el canal.
 AD1CON1=0x80E0; // Arrancamos periférico pero no empieza muestrear y comienza la conversión automáticamente al terminar de muestrear.
-AD1CON1|=(1<<15);//Empezamos a muestrear.
+AD1CON1|=(1<<1);//Empezamos a muestrear.
 
 while(1){
 int valor;
@@ -78,7 +78,7 @@ muestra=0;
 
 }
 
-AD1CON1|=(1<<15);//Vuelve a empezar a muestrear.
+AD1CON1|=(1<<1);//Vuelve a empezar a muestrear.
 
 }
 
